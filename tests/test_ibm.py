@@ -5,6 +5,7 @@ from cloudtts import CloudTTSError
 from cloudtts import Gender
 from cloudtts import VoiceConfig
 from cloudtts import WatsonClient
+from cloudtts import WatsonCredential
 
 
 class TestWatsonClient(TestCase):
@@ -56,6 +57,15 @@ class TestWatsonClient(TestCase):
         txt = 'Hello world'
 
         self.assertRaises(CloudTTSError, lambda: self.c.tts(txt))
+
+    def test_invalid_credential(self):
+        self.c.auth({
+            'username': 'username',
+            'password': 'password',
+            'url': 'https://stream.watsonplatform.net/text-to-speech/api'
+        })
+        txt = 'Hello world'
+        self.assertRaises(TypeError, lambda: self.c.tts(txt))
 
     def test_is_valid_voice(self):
         for voice in WatsonClient.AVAILABLE_VOICES:
@@ -130,6 +140,10 @@ class TestWatsonClient(TestCase):
 
             d = {'accept': '{};rate={}'.format(codec, WatsonClient.MAX_RATE+1)}
             self.assertFalse(self.c._is_valid_accept(d))
+
+
+class TestWatsonCredential(TestCase):
+    pass
 
 
 if __name__ == '__main__':

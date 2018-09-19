@@ -60,6 +60,11 @@ class TestPollyClient(TestCase):
 
         self.assertRaises(CloudTTSError, lambda: self.c.tts(txt))
 
+    def test_invalid_credential(self):
+        self.c.auth({'region_name': 'ap-northeast-1'})
+        txt = 'Hello world'
+        self.assertRaises(TypeError, lambda: self.c.tts(txt))
+
     def test_is_valid_output_format(self):
         self.assertFalse(self.c._is_valid_output_format({}))
 
