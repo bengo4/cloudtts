@@ -141,3 +141,11 @@ with open('/path/to/ja_JP_male.ogg', 'wb'):
     f.write(audio)
 
 ```
+
+# Clients
+
+## PollyClient
+
+### Credential
+
+PollyClient requires a credential which is an instance of PollyCredential to run tts().  When you construct a PollyCredential instance, "region_name" is required.  You can set "aws_access_key_id" and "aws_secret_access_key".
