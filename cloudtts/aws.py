@@ -152,12 +152,13 @@ class PollyClient(Client):
             self._is_valid_sample_rate(params) and \
             self._is_valid_voice_id(params)
 
-    def tts(self, text, voice_config=None, detail=None):
+    def tts(self, text='', ssml='', voice_config=None, detail=None):
         '''
         Synthesizes audio data for text.
 
         Args:
-          text: string / target to be synthesized
+          text: string / target to be synthesized(plain text)
+          ssml: string / target to be synthesized(SSML)
           voice_config: VoiceConfig / parameters for voice and audio
           detail: dict / detail parameters for voice and audio
 
@@ -165,7 +166,12 @@ class PollyClient(Client):
           binary
         '''
 
-        if not self.credential:
+        if self.credential:
+            if isinstance(self.credential, PollyCredential):
+                pass
+            else:
+                raise TypeError('Invalid credential')
+        else:
             raise CloudTTSError('No Authentication yet')
 
         if self.credential.has_access_key():
@@ -182,7 +188,8 @@ class PollyClient(Client):
         params = self._make_params(voice_config, detail)
 
         response = polly.synthesize_speech(
-            Text=text,
+            Text=ssml if ssml else text,
+            TextType='ssml' if ssml else 'text',
             OutputFormat=params['output_format'],
             VoiceId=params['voice_id'],
             SampleRate=params['sample_rate'],
