@@ -1,3 +1,5 @@
+import re
+
 import requests
 
 from .client import AudioFormat
@@ -8,12 +10,17 @@ from .client import Language
 from .client import VoiceConfig
 
 
+class AzureCredential:
+    def __init__(self, api_key):
+        self.api_key = api_key
+
+
 class AzureClient(Client):
     '''
     This is a client class for Azure Text to Speech API
 
-    >>> from cloudtts import AzureClient
-    >>> cred = {'api_key': YOUR_API_KEY}
+    >>> from cloudtts import AzureClient, AzureCredential
+    >>> cred = AzureCredential(api_key=YOUR_API_KEY)
     >>> c = AzureClient(cred)
     >>> audio = c.tts('Hello world!')
     >>> open('/path/to/save/audio', 'wb') as f:
@@ -143,7 +150,7 @@ class AzureClient(Client):
         return self._is_valid_format(params) and self._is_valid_voice(params)
 
     def _token(self):
-        headers = {'Ocp-Apim-Subscription-Key': self.credential['api_key']}
+        headers = {'Ocp-Apim-Subscription-Key': self.credential.api_key}
         r = requests.post(AzureClient.TokenEndpoint, headers=headers)
 
         return str(r.text)
@@ -161,7 +168,12 @@ class AzureClient(Client):
           binary
         '''
 
-        if not self.credential:
+        if self.credential:
+            if isinstance(self.credential, AzureCredential):
+                pass
+            else:
+                raise TypeError('Invalid credential')
+        else:
             raise CloudTTSError('No Authentication yet')
 
         params = self._make_params(voice_config, detail)
@@ -170,7 +182,7 @@ class AzureClient(Client):
             lang=params['language'],
             gender=params['gender'],
             voice=params['voice'],
-            text=text
+            text=re.compile('<.?speak>').sub('', text)
         )
 
         if len(_xml) > AzureClient.MAX_TEXT_LENGTH:
