@@ -105,12 +105,13 @@ class GoogleClient(Client):
 
         super().auth(credential)
 
-    def tts(self, text, voice_config=None, detail=None):
+    def tts(self, text='', ssml='', voice_config=None, detail=None):
         '''
         Synthesizes audio data for text.
 
         Args:
-          text: string / target to be synthesized
+          text: string / target to be synthesized(plain text)
+          ssml: string / target to be synthesized(SSML)
           voice_config: VoiceConfig / parameters for voice and audio
           detail: dict / detail parameters for voice and audio
 
@@ -124,7 +125,10 @@ class GoogleClient(Client):
         params = self._make_params(voice_config, detail)
 
         client = texttospeech.TextToSpeechClient()
-        input_text = texttospeech.types.SynthesisInput(text=text)
+        if ssml:
+            input_text = texttospeech.types.SynthesisInput(ssml=ssml)
+        else:
+            input_text = texttospeech.types.SynthesisInput(text=text)
         voice = texttospeech.types.VoiceSelectionParams(
             language_code=params['language'],
             ssml_gender=params['gender'])
