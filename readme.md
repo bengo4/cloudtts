@@ -144,8 +144,72 @@ with open('/path/to/ja_JP_male.ogg', 'wb'):
 
 # Clients
 
+## AzureClient
+
+### Credential
+
+It is required to set `api_key` for AzureCredential.
+
+### SSML Support
+
+AzureClient's tts() supports both plain text and SSML for `text`.
+
+
+## GoogleClient
+
+### Credential
+
+Credential for GoogleClient is a file path which you downloaded from Google Cloud Console.
+
+### SSML Support
+
+If you want to synthesize SSML with tts(), set value to `ssml`.
+
+```python
+audio = c.tts(ssml='<speak>Hello <break time="300ms" /> world</speak>')
+
+```
+
+
 ## PollyClient
 
 ### Credential
 
-PollyClient requires a credential which is an instance of PollyCredential to run tts().  When you construct a PollyCredential instance, "region_name" is required.  You can set "aws_access_key_id" and "aws_secret_access_key".
+It is required to set `region_name` for PollyCredential.  You can set `aws_access_key_id` and `aws_secret_access_key` for it.
+
+### SSML Support
+
+If you want to synthesize SSML with tts(), set value to `ssml`.
+
+```python
+audio = c.tts(ssml='<speak>Hello <break time="300ms" /> world</speak>')
+
+```
+
+
+## WatsonClient
+
+### Credential
+
+It is required to set `username`, `password`, and `url` for WatsonCredential.
+
+### SSML Support
+
+WatsonClient's tts() supports both plain text and SSML for `text`.
+
+
+# Development
+
+You can construct an environment to develop cloudtts.
+
+```
+$ pip install --requirement requirements.txt
+```
+
+
+
+Before submitting, please run unittest.
+
+```python
+$ python -m unittest
+```
