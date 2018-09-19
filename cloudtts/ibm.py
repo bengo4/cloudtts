@@ -11,14 +11,23 @@ from .client import Language
 from .client import VoiceConfig
 
 
+class WatsonCredential:
+    def __init__(self, username, password, url):
+        self.username = username
+        self.password = password
+        self.url = url
+
+
 class WatsonClient(Client):
     '''
     This is a client class for Watson Text to Speech API
 
-    >>> from cloudtts import WatsonClient
-    >>> cred = {'username': YOUR_USER_NAME,
-    ...         'password': YOUR_PASSWORD,
-    ...         'url': API_ENDPOINT}
+    >>> from cloudtts import WatsonClient, WatsonCredential
+    >>> cred = WatsonCredential(
+    ...         username=YOUR_USER_NAME,
+    ...         password=YOUR_PASSWORD,
+    ...         url=API_ENDPOINT
+    ... )
     >>> c = IBMClient(cred)
     >>> audio = c.tts('Hello world!')
     >>> open('/path/to/save/audio', 'wb') as f:
@@ -154,7 +163,12 @@ class WatsonClient(Client):
           binary
         '''
 
-        if not self.credential:
+        if self.credential:
+            if isinstance(self.credential, WatsonCredential):
+                pass
+            else:
+                raise TypeError('Invalid credential')
+        else:
             raise CloudTTSError('No Authentication yet')
 
         params = self._make_params(voice_config, detail)
@@ -165,13 +179,13 @@ class WatsonClient(Client):
         if not self._is_valid_voice(params):
             raise ValueError
 
-        _url = '{}/{}/synthesize'.format(self.credential['url'],
+        _url = '{}/{}/synthesize'.format(self.credential.url,
                                          WatsonClient.VERSION)
         _query = {'voice': params['voice']}
         if 'customization_id' in params:
             _query['customization_id'] = params['customization_id']
         _headers = {'Accept': params['accept']}
-        _auth = (self.credential['username'], self.credential['password'])
+        _auth = (self.credential.username, self.credential.password)
         _data = {'text': text}
 
         json_size = len(json.dumps(_data).encode())
