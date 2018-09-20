@@ -10,14 +10,27 @@ from .client import Language
 from .client import VoiceConfig
 
 
+class PollyCredential:
+    def __init__(self, region_name,
+                 aws_access_key_id='', aws_secret_access_key=''):
+        self.region_name = region_name
+        self.aws_access_key_id = aws_access_key_id
+        self.aws_secret_access_key = aws_secret_access_key
+
+    def has_access_key(self):
+        return self.aws_access_key_id and self.aws_secret_access_key
+
+
 class PollyClient(Client):
     '''
     This is a client class for Amazon Polly API
 
-    >>> from cloudtts import PollyClient
-    >>> cred = {'aws_access_key_id': YOUR_ACCESS_KEY_ID,
-    ...         'aws_secret_access_key': YOUR_SECRET_ACCESS_KEY,
-    ...        'region': AWS_REGION}
+    >>> from cloudtts import PollyClient, PollyCredential
+    >>> cred = PollyCredential(
+    ...         aws_access_key_id=YOUR_ACCESS_KEY_ID,
+    ...         aws_secret_access_key=YOUR_SECRET_ACCESS_KEY,
+    ...         region_name=AWS_REGION_NAME
+    ... )
     >>> c = PollyClient(cred)
     >>> audio = c.tts('Hello world!')
     >>> open('/path/to/save/audio', 'wb') as f:
@@ -139,12 +152,13 @@ class PollyClient(Client):
             self._is_valid_sample_rate(params) and \
             self._is_valid_voice_id(params)
 
-    def tts(self, text, voice_config=None, detail=None):
+    def tts(self, text='', ssml='', voice_config=None, detail=None):
         '''
         Synthesizes audio data for text.
 
         Args:
-          text: string / target to be synthesized
+          text: string / target to be synthesized(plain text)
+          ssml: string / target to be synthesized(SSML)
           voice_config: VoiceConfig / parameters for voice and audio
           detail: dict / detail parameters for voice and audio
 
@@ -152,19 +166,30 @@ class PollyClient(Client):
           binary
         '''
 
-        if not self.credential:
+        if self.credential:
+            if isinstance(self.credential, PollyCredential):
+                pass
+            else:
+                raise TypeError('Invalid credential')
+        else:
             raise CloudTTSError('No Authentication yet')
+
+        if self.credential.has_access_key():
+            sess = Session(
+                region_name=self.credential.region_name,
+                aws_access_key_id=self.credential.aws_access_key_id,
+                aws_secret_access_key=self.credential.aws_secret_access_key
+            )
+        else:
+            sess = Session(region_name=self.credential.region_name)
+
+        polly = sess.client('polly')
 
         params = self._make_params(voice_config, detail)
 
-        session = Session(
-            aws_access_key_id=self.credential['aws_access_key_id'],
-            aws_secret_access_key=self.credential['aws_secret_access_key'],
-            region_name=self.credential['region'])
-
-        polly = session.client('polly')
         response = polly.synthesize_speech(
-            Text=text,
+            Text=ssml if ssml else text,
+            TextType='ssml' if ssml else 'text',
             OutputFormat=params['output_format'],
             VoiceId=params['voice_id'],
             SampleRate=params['sample_rate'],

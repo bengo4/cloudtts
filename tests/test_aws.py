@@ -5,6 +5,7 @@ from cloudtts import CloudTTSError
 from cloudtts import Gender
 from cloudtts import Language
 from cloudtts import PollyClient
+from cloudtts import PollyCredential
 from cloudtts import VoiceConfig
 
 
@@ -59,6 +60,11 @@ class TestPollyClient(TestCase):
 
         self.assertRaises(CloudTTSError, lambda: self.c.tts(txt))
 
+    def test_invalid_credential(self):
+        self.c.auth({'region_name': 'ap-northeast-1'})
+        txt = 'Hello world'
+        self.assertRaises(TypeError, lambda: self.c.tts(txt))
+
     def test_is_valid_output_format(self):
         self.assertFalse(self.c._is_valid_output_format({}))
 
@@ -83,6 +89,20 @@ class TestPollyClient(TestCase):
 
         for voice in PollyClient.AVAILABLE_VOICE_IDS:
             self.assertTrue(self.c._is_valid_voice_id({'voice_id': voice}))
+
+
+class TestPollyCredential(TestCase):
+    def test_has_access_key(self):
+        c = PollyCredential('ap-northeast-1')
+        self.assertFalse(c.has_access_key())
+
+        c = PollyCredential('ap-northeast-1', aws_access_key_id='abc')
+        self.assertFalse(c.has_access_key())
+
+        c = PollyCredential('ap-northeast-1',
+                            aws_access_key_id='abc',
+                            aws_secret_access_key='xyz')
+        self.assertTrue(c.has_access_key())
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
-from cloudtts import AzureClient
+from cloudtts import AzureClient, AzureCredential
 from cloudtts import GoogleClient
-from cloudtts import PollyClient
-from cloudtts import WatsonClient
+from cloudtts import PollyClient, PollyCredential
+from cloudtts import WatsonClient, WatsonCredential
 
 from cloudtts import VoiceConfig
 from cloudtts import Gender
@@ -12,13 +12,20 @@ jaVC = VoiceConfig(language=Language.ja_JP, gender=Gender.male)
 
 
 def _azure():
-    cred = {'api_key': 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'}
-
+    cred = AzureCredential(api_key='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
     c = AzureClient(cred)
 
     # English US
     audio = c.tts('Hi there, it is too hot today.', voice_config=enVC)
     with open('azure_hot_en.mp3', 'wb') as f:
+        f.close(audio)
+
+    # English US with SSML
+    audio = c.tts(
+        '<speak>Hi there,<break time="1s" /> it is too hot today.</speak>',
+        voice_config=enVC
+    )
+    with open('azure_hot_en_ssml.mp3', 'wb') as f:
         f.close(audio)
 
     # Japanese
@@ -35,6 +42,12 @@ def _google():
     with open('google_hot_en.mp3', 'wb') as f:
         f.write(audio)
 
+    # English US with SSML
+    ssml = '<speak>Hi there,<break time="1s" /> it is too hot today.</speak>'
+    audio = c.tts(ssml=ssml, voice_config=enVC)
+    with open('google_hot_en_ssml.mp3', 'wb') as f:
+        f.write(audio)
+
     # Japanese
     audio = c.tts('今日はすごく暑いですね。', voice_config=jaVC)
     with open('google_hot_ja.mp3', 'wb') as f:
@@ -42,14 +55,22 @@ def _google():
 
 
 def _polly():
-    cred = {'aws_access_key_id': 'XXXXXXXXXXXXXXXXXXXX',
-            'aws_secret_access_key': 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY',
-            'region': 'ap-northeast-1'}
+    cred = PollyCredential(
+        aws_access_key_id='XXXXXXXXXXXXXXXXXXXX',
+        aws_secret_access_key='YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY',
+        region_name='ap-northeast-1'
+    )
     c = PollyClient(cred)
 
     # English US
     audio = c.tts('Hi there, it is too hot today.', voice_config=enVC)
     with open('polly_hot_en.mp3', 'wb') as f:
+        f.write(audio)
+
+    # English US with SSML
+    ssml = '<speak>Hi there,<break time="1s" /> it is too hot today.</speak>'
+    audio = c.tts(ssml=ssml, voice_config=enVC)
+    with open('polly_hot_en_ssml.mp3', 'wb') as f:
         f.write(audio)
 
     # Japanese
@@ -59,15 +80,25 @@ def _polly():
 
 
 def _watson():
-    cred = {'url': 'https://stream.watsonplatform.net/text-to-speech/api',
-            'username': 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX',
-            'password': 'YYYYYYYYYYYY'}
+    cred = WatsonCredential(
+        url='https://stream.watsonplatform.net/text-to-speech/api',
+        username='XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX',
+        password='YYYYYYYYYYYY',
+    )
     c = WatsonClient(cred)
 
     # English US
     audio = c.tts('Hi there, it is too hot today.', voice_config=enVC)
     with open('watson_hot_en.mp3', 'wb') as f:
         f.write(audio)
+
+    # English US with SSML
+    audio = c.tts(
+        '<speak>Hi there,<break time="1s" /> it is too hot today.</speak>',
+        voice_config=enVC
+    )
+    with open('watson_hot_en_ssml.mp3', 'wb') as f:
+        f.close(audio)
 
     # Japanese
     audio = c.tts('今日はすごく暑いですね。', voice_config=jaVC)

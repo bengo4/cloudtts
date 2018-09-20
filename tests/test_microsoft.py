@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from cloudtts import AudioFormat
 from cloudtts import AzureClient
+from cloudtts import AzureCredential
 from cloudtts import CloudTTSError
 from cloudtts import Gender
 from cloudtts import Language
@@ -67,6 +68,11 @@ class TestAzureClient(TestCase):
 
         self.assertRaises(CloudTTSError, lambda: self.c.tts(txt))
 
+    def test_invalid_credential(self):
+        self.c.auth({'api_key': 'xxxx'})
+        txt = 'Hello world'
+        self.assertRaises(TypeError, lambda: self.c.tts(txt))
+
     def test_is_valid_format(self):
         for format in AzureClient.AVAILABLE_FORMATS:
             self.assertTrue(self.c._is_valid_format({'format': format}))
@@ -74,6 +80,10 @@ class TestAzureClient(TestCase):
     def test_is_valid_voice(self):
         for voice in AzureClient.AVAILABLE_VOICES:
             self.assertTrue(self.c._is_valid_voice({'voice': voice}))
+
+
+class TestAzureCredential(TestCase):
+    pass
 
 
 if __name__ == '__main__':
