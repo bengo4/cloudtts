@@ -25,7 +25,7 @@ c = XXXClient(cred)
 or
 
 ```python
-from cloudtts import XXXClient, XXXClient
+from cloudtts import XXXClient, XXXCredential
 
 c = XXXClient()
 cred = XXXCredential(aaa='aaa', bbb='bbb')
