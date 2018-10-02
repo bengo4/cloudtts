@@ -67,6 +67,9 @@ class Client:
     This is a base client for text to speech api services.
     '''
 
+    TOO_LONG_DATA_MSG = ('Too long data is passed to tts(). '
+                         'Available up to {} characters, but got {}.')
+
     def __init__(self, credential=None):
         self.auth(credential)
 
