@@ -35,7 +35,7 @@ class WatsonClient(Client):
     '''
 
     VERSION = 'v1'
-    MAX_TEXT_BYTES = 5 * 1024
+    MAX_TEXT_BYTES = 5 * 1024 - len(json.dumps({'text': ''}))
 
     AVAILABLE_ACCEPTS = {
         'require_rate': [
@@ -179,6 +179,15 @@ class WatsonClient(Client):
         if not self._is_valid_voice(params):
             raise ValueError
 
+        if not text:
+            raise ValueError('No text is passed')
+
+        text_bytes = len(json.dumps(text))
+        if text_bytes > WatsonClient.MAX_TEXT_BYTES:
+            msg = 'Available up to {} bytes, but got {}'.format(
+                WatsonClient.MAX_TEXT_BYTES, text_bytes)
+            raise CloudTTSError(msg)
+
         _url = '{}/{}/synthesize'.format(self.credential.url,
                                          WatsonClient.VERSION)
         _query = {'voice': params['voice']}
@@ -186,16 +195,9 @@ class WatsonClient(Client):
             _query['customization_id'] = params['customization_id']
         _headers = {'Accept': params['accept']}
         _auth = (self.credential.username, self.credential.password)
-        _data = {'text': text}
-
-        json_size = len(json.dumps(_data).encode())
-        if json_size > WatsonClient.MAX_TEXT_BYTES:
-            msg = 'WatsonClient.tts() process up to {} bytes, but got {}'.format(
-                WatsonClient.MAX_TEXT_BYTES, json_size)
-            raise CloudTTSError(msg)
 
         r = requests.post(url=_url, params=_query, headers=_headers,
-                          auth=_auth, json=_data)
+                          auth=_auth, json={'text': text})
 
         if r.status_code == requests.codes.ok:
             return r.content
