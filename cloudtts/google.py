@@ -1,4 +1,5 @@
 import os
+import re
 
 from google.cloud import texttospeech
 
@@ -19,9 +20,9 @@ class GoogleClient(Client):
     >>> audio = c.tts('Hello world!')
     >>> open('/path/to/save/audio', 'wb') as f:
     ...   f.write(audio)
-
     '''
 
+    MAX_TEXT_LENGTH = 5000
     AUDIO_FORMAT_DICT = {
         AudioFormat.mp3: texttospeech.enums.AudioEncoding.MP3,
         AudioFormat.ogg_opus: texttospeech.enums.AudioEncoding.OGG_OPUS,
@@ -121,6 +122,20 @@ class GoogleClient(Client):
 
         if not self.credential:
             raise CloudTTSError('No Authentication yet')
+
+        if text:
+            if len(text) > GoogleClient.MAX_TEXT_LENGTH:
+                msg = Client.TOO_LONG_DATA_MSG.format(
+                    GoogleClient.MAX_TEXT_LENGTH, len(text))
+                raise CloudTTSError(msg)
+        elif ssml:
+            _text = re.compile('</?speak>').sub('', ssml)
+            if len(_text) > GoogleClient.MAX_TEXT_LENGTH:
+                msg = Client.TOO_LONG_DATA_MSG.format(
+                    GoogleClient.MAX_TEXT_LENGTH, len(_text))
+                raise CloudTTSError(msg)
+        else:
+            raise ValueError('No text or ssml is passed')
 
         params = self._make_params(voice_config, detail)
 
