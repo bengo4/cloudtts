@@ -60,6 +60,75 @@ class TestPollyClient(TestCase):
 
         self.assertRaises(CloudTTSError, lambda: self.c.tts(txt))
 
+    def test_error_without_data(self):
+        cred = PollyCredential('ap-northeast-1')
+        self.c.auth(cred)
+
+        self.assertRaises(ValueError, lambda: self.c.tts())
+
+    def test_acceptable_text_length(self):
+        cred = PollyCredential('ap-northeast-1')
+        self.c.auth(cred)
+
+        text = 'a' * PollyClient.MAX_TEXT_LENGTH
+
+        # raise TypeError not to call API and
+        # to make sure MAX_TEXT_LENGTH works
+        self.assertRaises(TypeError,
+                          lambda: self.c.tts(
+                              text=text,
+                              voice_config=True,
+                          ))
+
+    def test_error_with_too_long_text(self):
+        cred = PollyCredential('ap-northeast-1')
+        self.c.auth(cred)
+
+        text = 'a' * (PollyClient.MAX_TEXT_LENGTH+1)
+
+        # CloudTTSError is raised with too long text
+        self.assertRaises(CloudTTSError, lambda: self.c.tts(text=text))
+
+    def test_error_with_too_long_ssml(self):
+        cred = PollyCredential('ap-northeast-1')
+        self.c.auth(cred)
+
+        text = 'a' * PollyClient.MAX_TEXT_LENGTH
+
+        # raise TypeError not to call API and
+        # to make sure MAX_TEXT_LENGTH works
+        ssml = '<speak>{}</speak>'.format(text)
+        self.assertRaises(TypeError,
+                          lambda: self.c.tts(
+                              ssml=ssml,
+                              voice_config=True,
+                          ))
+
+        # CloudTTSError is raised with too long ssml
+        ssml = '<speak>{}</speak>'.format(text + 'a')
+        self.assertRaises(CloudTTSError, lambda: self.c.tts(ssml=ssml))
+
+    def test_control_ssml_length_with_text(self):
+        cred = PollyCredential('ap-northeast-1')
+        self.c.auth(cred)
+
+        text = 'a' * PollyClient.MAX_TEXT_LENGTH
+        ssml = '<speak><break>{}</speak>'.format(text)
+
+        # '<break>' is couted and CloudTTSError is raised
+        self.assertRaises(CloudTTSError, lambda: self.c.tts(ssml=ssml))
+
+        # 'text' is used to count characters
+        #
+        # raise TypeError not to call API and
+        # to make sure MAX_TEXT_LENGTH works
+        self.assertRaises(TypeError,
+                          lambda: self.c.tts(
+                              text=text,
+                              ssml=ssml,
+                              voice_config=True,
+                          ))
+
     def test_invalid_credential(self):
         self.c.auth({'region_name': 'ap-northeast-1'})
         txt = 'Hello world'
