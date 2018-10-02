@@ -68,6 +68,23 @@ class TestAzureClient(TestCase):
 
         self.assertRaises(CloudTTSError, lambda: self.c.tts(txt))
 
+    def test_error_without_data(self):
+        cred = AzureCredential(api_key='xxxx')
+        self.c.auth(cred)
+
+        self.assertRaises(ValueError, lambda: self.c.tts(text=''))
+
+    def test_error_with_too_long_text(self):
+        cred = AzureCredential(api_key='xxxx')
+        self.c.auth(cred)
+
+        text = 'a' * (AzureClient.MAX_TEXT_LENGTH+1)
+
+        # CloudTTSError is raised with too long text
+        # Total XML size matters to data size, so this exception will be raised
+        # with less data
+        self.assertRaises(CloudTTSError, lambda: self.c.tts(text=text))
+
     def test_invalid_credential(self):
         self.c.auth({'api_key': 'xxxx'})
         txt = 'Hello world'
