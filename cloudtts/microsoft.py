@@ -176,18 +176,22 @@ class AzureClient(Client):
         else:
             raise CloudTTSError('No Authentication yet')
 
+        if not text:
+            raise ValueError('No text is passed')
+
         params = self._make_params(voice_config, detail)
 
         _xml = AzureClient.XML.format(
             lang=params['language'],
             gender=params['gender'],
             voice=params['voice'],
-            text=re.compile('<.?speak>').sub('', text)
+            text=re.compile('</?speak>').sub('', text)
         )
 
         if len(_xml) > AzureClient.MAX_TEXT_LENGTH:
-            msg = 'AzureClient.tts() process up to {} chars, but got {}'.format(
+            msg = 'Available up to {} characters for XML, but got {}'.format(
                 AzureClient.MAX_TEXT_LENGTH, len(_xml))
+
             raise CloudTTSError(msg)
 
         _headers = {'Content-type': 'application/ssml+xml',

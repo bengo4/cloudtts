@@ -58,6 +58,36 @@ class TestWatsonClient(TestCase):
 
         self.assertRaises(CloudTTSError, lambda: self.c.tts(txt))
 
+    def test_error_without_data(self):
+        cred = WatsonCredential(username='xxxx', password='yyyy',
+                                url='https://example.com')
+        self.c.auth(cred)
+
+        self.assertRaises(ValueError, lambda: self.c.tts(text=''))
+
+    def test_acceptable_text_length(self):
+        cred = WatsonCredential(username='xxxx', password='yyyy',
+                                url='https://example.com')
+        self.c.auth(cred)
+
+        text = 'a' * (WatsonClient.MAX_TEXT_BYTES)
+
+        self.assertRaises(TypeError,
+                          lambda: self.c.tts(
+                              text=text,
+                              voice_config=True,
+                          ))
+
+    def test_error_with_too_long_text(self):
+        cred = WatsonCredential(username='xxxx', password='yyyy',
+                                url='https://example.com')
+        self.c.auth(cred)
+
+        text = 'a' * (WatsonClient.MAX_TEXT_BYTES+1)
+
+        # CloudTTSError is raised with too long text
+        self.assertRaises(CloudTTSError, lambda: self.c.tts(text=text))
+
     def test_invalid_credential(self):
         self.c.auth({
             'username': 'username',

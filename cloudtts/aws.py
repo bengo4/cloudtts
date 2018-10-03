@@ -1,4 +1,5 @@
 from contextlib import closing
+import re
 
 from boto3 import Session
 
@@ -37,6 +38,7 @@ class PollyClient(Client):
     ...   f.write(audio)
     '''
 
+    MAX_TEXT_LENGTH = 3000
     AVAILABLE_SAMPLE_RATES = {
         'mp3': ('8000', '16000', '22050'),
         'ogg_vorbis': ('8000', '16000', '22050'),
@@ -182,6 +184,20 @@ class PollyClient(Client):
             )
         else:
             sess = Session(region_name=self.credential.region_name)
+
+        if text:
+            if len(text) > PollyClient.MAX_TEXT_LENGTH:
+                msg = Client.TOO_LONG_DATA_MSG.format(
+                    PollyClient.MAX_TEXT_LENGTH, len(text))
+                raise CloudTTSError(msg)
+        elif ssml:
+            _text = re.compile('</?speak>').sub('', ssml)
+            if len(_text) > PollyClient.MAX_TEXT_LENGTH:
+                msg = Client.TOO_LONG_DATA_MSG.format(
+                    PollyClient.MAX_TEXT_LENGTH, len(_text))
+                raise CloudTTSError(msg)
+        else:
+            raise ValueError('No text or ssml is passed')
 
         polly = sess.client('polly')
 

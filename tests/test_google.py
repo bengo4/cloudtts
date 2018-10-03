@@ -75,6 +75,70 @@ class TestGoogleClient(TestCase):
 
         self.assertRaises(CloudTTSError, lambda: self.c.tts(txt))
 
+    def test_error_without_data(self):
+        self.c.auth('/path/to/google/credential.json')
+
+        self.assertRaises(ValueError, lambda: self.c.tts())
+
+    def test_acceptable_text_length(self):
+        self.c.auth('/path/to/google/credential.json')
+
+        text = 'a' * GoogleClient.MAX_TEXT_LENGTH
+
+        # raise TypeError not to call API and
+        # to make sure MAX_TEXT_LENGTH works
+        self.assertRaises(TypeError,
+                          lambda: self.c.tts(
+                              text=text,
+                              voice_config=True,
+                          ))
+
+    def test_error_with_too_long_text(self):
+        self.c.auth('/path/to/google/credential.json')
+
+        text = 'a' * (GoogleClient.MAX_TEXT_LENGTH+1)
+
+        # CloudTTSError is raised with too long text
+        self.assertRaises(CloudTTSError, lambda: self.c.tts(text=text))
+
+    def test_error_with_too_long_ssml(self):
+        self.c.auth('/path/to/google/credential.json')
+
+        text = 'a' * GoogleClient.MAX_TEXT_LENGTH
+
+        # raise TypeError not to call API and
+        # to make sure MAX_TEXT_LENGTH works
+        ssml = '<speak>{}</speak>'.format(text)
+        self.assertRaises(TypeError,
+                          lambda: self.c.tts(
+                              ssml=ssml,
+                              voice_config=True,
+                          ))
+
+        # CloudTTSError is raised with too long ssml
+        ssml = '<speak>{}</speak>'.format(text + 'a')
+        self.assertRaises(CloudTTSError, lambda: self.c.tts(ssml=ssml))
+
+    def test_control_ssml_length_with_text(self):
+        self.c.auth('/path/to/google/credential.json')
+
+        text = 'a' * GoogleClient.MAX_TEXT_LENGTH
+        ssml = '<speak><break>{}</speak>'.format(text)
+
+        # '<break>' is couted and CloudTTSError is raised
+        self.assertRaises(CloudTTSError, lambda: self.c.tts(ssml=ssml))
+
+        # 'text' is used to count characters
+        #
+        # raise TypeError not to call API and
+        # to make sure MAX_TEXT_LENGTH works
+        self.assertRaises(TypeError,
+                          lambda: self.c.tts(
+                              text=text,
+                              ssml=ssml,
+                              voice_config=True,
+                          ))
+
 
 if __name__ == '__main__':
     unittest.main()
